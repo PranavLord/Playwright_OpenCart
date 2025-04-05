@@ -20,7 +20,7 @@ import static com.qa.opencart.factory.playwrightFactory.takeScreenshot;
 
 public class ExtentReportListener implements ITestListener {
 
-    private static final String OUTPUT_FOLDER = "./build/";
+    private static final String OUTPUT_FOLDER = System.getProperty("user.dir") + "/build/";
     private static final String FILE_NAME = "TestExecutionReport.html";
 
     private static ExtentReports extent = init();
