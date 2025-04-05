@@ -30,10 +30,20 @@ pipeline {
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     git 'https://github.com/PranavLord/Playwright_OpenCart.git'
                     bat '''
-                        mvn clean test -Dsurefire.suiteXmlFiles=src/test/resources/testrunners/testng_regression.xml -Dfile.encoding=UTF-8 -e -X
+                    mvn clean test -Dsurefire.suiteXmlFiles=src/test/resources/testrunners/testng_regression.xml -Dfile.encoding=UTF-8 -e -X
                     '''
-
                 }
+            }
+        }
+
+        stage('Debug Check for Report') {
+            steps {
+                echo "Listing root directory..."
+                bat 'dir'
+                echo "Listing build directory..."
+                bat 'dir build'
+                echo "Checking TestExecutionReport.html exists..."
+                bat 'type build\\TestExecutionReport.html'
             }
         }
 
