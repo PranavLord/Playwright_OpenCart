@@ -29,7 +29,10 @@ pipeline {
             steps {
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     git 'https://github.com/PranavLord/Playwright_OpenCart.git'
-                    bat "bat "mvn clean test -Dsurefire.suiteXmlFiles=src/test/resources/testrunners/testng_regression.xml -Dfile.encoding=UTF-8 -e -X"
+                    bat '''
+                        mvn clean test -Dsurefire.suiteXmlFiles=src/test/resources/testrunners/testng_regression.xml -Dfile.encoding=UTF-8 -e -X
+                    '''
+
                 }
             }
         }
