@@ -1,63 +1,60 @@
-pipeline
-{
+pipeline {
     agent any
 
-    tools{
-    	maven 'maven'
-        }
+    tools {
+        maven 'Maven 3'
+    }
 
-    stages
-    {
-        stage('Build')
-        {
-            steps
-            {
-                 git 'https://github.com/jglick/simple-maven-project-with-tests.git'
-                 sh "mvn -Dmaven.test.failure.ignore=true clean package"
-            }
-            post
-            {
-                success
-                {
-                    junit '**/target/surefire-reports/TEST-*.xml'
-                    archiveArtifacts 'target/*.jar'
-                }
-            }
-        }
+    environment {
+        REPORT_DIR = 'build'
+        REPORT_FILE = 'TestExecutionReport.html'
+    }
 
+    stages {
 
-
-        stage("Deploy to QA"){
-            steps{
-                echo("deploy to qa")
-            }
-        }
-
-        stage('Regression Automation Test') {
+        stage('Checkout Code') {
             steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    git 'https://github.com/PranavLord/Playwright_OpenCart.git'
-                    sh "mvn clean test -Dsurefire.suiteXmlFiles=src/test/resources/testrunners/testng_regression.xml"
-
-                }
+                git branch: 'main', url: 'https://github.com/PranavLord/Playwright_OpenCart.git'
             }
         }
 
+        stage('Debug Suite XML Path') {
+             steps {
+                echo 'Checking if the testng_regression.xml file exists and is readable...'
+                bat 'dir src\\test\\resources\\testrunners'
+                bat 'type src\\test\\resources\\testrunners\\testng_regression.xml'
+         }
+    }
 
-        stage('Publish Extent Report'){
-            steps{
-                     publishHTML([allowMissing: false,
-                                  alwaysLinkToLastBuild: false,
-                                  keepAll: true,
-                                  reportDir: 'build',
-                                  reportFiles: 'TestExecutionReport.html',
-                                  reportName: 'HTML Extent Report',
-                                  reportTitles: ''])
+        stage('Run Tests') {
+            steps {
+                bat 'mvn clean test -Dsurefire.suiteXmlFiles=src/test/resources/testrunners/testng_regression.xml -Dfile.encoding=UTF-8'
             }
         }
 
+        stage('Verify Report File Exists') {
+            steps {
+                bat 'dir /s /b build\\*.html'
+            }
+        }
 
+        stage('Publish Extent Report') {
+            steps {
+                publishHTML([allowMissing: false,
+                             alwaysLinkToLastBuild: true,
+                             keepAll: true,
+                             reportDir: "${env.REPORT_DIR}",
+                             reportFiles: "${env.REPORT_FILE}",
+                             reportName: 'HTML Extent Report'])
+            }
+        }
+    }
 
-
+    post {
+        always {
+            echo 'Cleaning up...'
+            junit '**/target/surefire-reports/*.xml'
+            archiveArtifacts artifacts: '**/target/*.jar', allowEmptyArchive: true
+        }
     }
 }
